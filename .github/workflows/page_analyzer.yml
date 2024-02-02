@@ -9,8 +9,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build-proj
         uses: actions/setup-python@v4
-        with:
-          python-version: 3.10
       - name: Install requirements
         run: |
           pip install poetry

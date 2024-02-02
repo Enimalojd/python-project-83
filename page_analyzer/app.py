@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from config import SECRET_KEY
 
 
@@ -7,5 +7,5 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 
 @app.route('/')
-def hello():
-    return 'Hello world!'
+def index():
+    return render_template('index.html')

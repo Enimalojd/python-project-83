@@ -21,7 +21,13 @@
 
             </div>
         </nav>
-
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     </header>
 
 
@@ -42,8 +48,19 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for url in urls %}
+                        <tr>
+                            <td>{{ url[0] }}</td>
+                            <td>
+                                <a href="/urls/{{ url[0] }}">{{ url[1] }}</a>
+                            </td>
 
+                            <td>#</td>
+                            <td>#</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
+
                 </table>
             </div>
 

@@ -51,11 +51,10 @@ def post_urls():
                 if url_id:
                     flash('Такой сайт уже существует!')
                     return redirect(url_for('get_url', id=url_id[0]), code=302)
-                else:
-                    curs.execute(ADD_URL, (url, date.today()))
-                    url_id = curs.fetchone()
-                    flash('Сайт успешно добавлен!')
-                    return redirect(url_for('get_url', id=url_id[0]), code=302)
+                curs.execute(ADD_URL, (url, date.today()))
+                url_id = curs.fetchone()
+                flash('Сайт успешно добавлен!')
+                return redirect(url_for('get_url', id=url_id[0]), code=302)
     except OperationalError:
         flash('Ошибка при подключении к базе данных!')
         return redirect('/')

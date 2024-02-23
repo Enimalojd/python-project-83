@@ -33,11 +33,10 @@
                             <td>{{ url[0] }}</td>
                             <td>
                                 <a href="{{ url_for('get_url', id=url[0]) }}">{{ url[1] }}</a>
-
                             </td>
 
-                            <td>#</td>
-                            <td>#</td>
+                            <td>{{ url[2] }}</td>
+                            <td>{{ url[3] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

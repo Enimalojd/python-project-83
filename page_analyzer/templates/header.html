@@ -8,11 +8,19 @@
 
         </div>
     </nav>
-    {% if messages %}
-    <ul>
-        {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
+    {% with alert = get_flashed_messages(category_filter=["alert"]) %}
+    {% if alert %}
+    <div class="alert alert-info" role="alert">{{ alert[0] }}</div>
     {% endif %}
+    {% endwith %}
+    {% with success = get_flashed_messages(category_filter=["success"]) %}
+    {% if success %}
+    <div class="alert alert-success" role="alert">{{ success[0] }}</div>
+    {% endif %}
+    {% endwith %}
+    {% with error = get_flashed_messages(category_filter=["error"]) %}
+    {% if error %}
+    <div class="alert alert-danger" role="alert">{{ error[0] }}</div>
+    {% endif %}
+    {% endwith %}
 </header>

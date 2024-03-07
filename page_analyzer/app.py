@@ -61,7 +61,7 @@ def post_urls():
                 curs.execute(CHECK_FOR_MATCHES, (url,))
                 url_id = curs.fetchone()
                 if url_id:
-                    flash('Такой сайт уже существует!', 'alert')
+                    flash('Страница уже существует', 'alert')
                     return redirect(url_for('get_url', id=url_id[0]), code=302)
                 curs.execute(ADD_URL, (url, date.today()))
                 url_id = curs.fetchone()

@@ -65,7 +65,7 @@ def post_urls():
                     return redirect(url_for('get_url', id=url_id[0]), code=302)
                 curs.execute(ADD_URL, (url, date.today()))
                 url_id = curs.fetchone()
-                flash('Сайт успешно добавлен!', 'success')
+                flash('Страница успешно добавлена', 'success')
                 conn.commit()
                 return redirect(url_for('get_url', id=url_id[0]), code=302)
     except OperationalError:

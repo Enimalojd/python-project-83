@@ -2,7 +2,8 @@ from datetime import date
 import psycopg2
 from psycopg2 import OperationalError
 from flask import (Flask, render_template, request,
-                   redirect, url_for, flash, get_flashed_messages)
+                   redirect, url_for, flash, get_flashed_messages,
+                   make_response)
 from config import SECRET_KEY, DATABASE_URL
 from .validate import validator
 from .db_requests import (SELECT_ALL_URLS, CHECK_FOR_MATCHES,
@@ -54,7 +55,7 @@ def post_urls():
     errors = validator(url)
     if errors:
         flash(F'{errors["url"]}', 'error')
-        return redirect(url_for('index'), code=302)
+        return make_response(render_template('index.html'), 422)
     url = url_parse(url)
     try:
         conn = psycopg2.connect(DATABASE_URL)

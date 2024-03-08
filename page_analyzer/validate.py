@@ -11,10 +11,13 @@ regex = re.compile(r'^(?:http|ftp)s?://'
 
 def validator(url):
     errors = {}
-    if len(url) > 255:
-        errors['url'] = 'URL первышает 255 символов'
-    if (re.match(regex, url) is not None) is False:
-        errors['url'] = 'Некорректный URL'
-    if url[-1] == '.':
-        errors['url'] = 'Некорректный URL'
+    if url:
+        if len(url) > 255:
+            errors['url'] = 'URL первышает 255 символов'
+        if (re.match(regex, url) is not None) is False:
+            errors['url'] = 'Некорректный URL'
+        if url[-1] == '.':
+            errors['url'] = 'Некорректный URL'
+        return errors
+    errors['url'] = 'Некорректный URL'
     return errors

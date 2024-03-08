@@ -110,7 +110,7 @@ def post_checks(id):
                     flash('Страница успешно проверена', 'success')
                     return redirect(url_for('get_url', id=int(id)), code=302)
                 flash('Произошла ошибка при проверке', 'error')
-                return redirect(url_for('get_url', id=int(id)), code=422)
+                return redirect(url_for('get_url', id=int(id)), code=302)
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
         return redirect(url_for('get_url', id=int(id)), code=302)

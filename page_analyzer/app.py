@@ -114,3 +114,8 @@ def post_checks(id):
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
         return redirect(url_for('get_url', id=int(id)), code=302)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404

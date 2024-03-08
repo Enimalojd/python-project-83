@@ -53,7 +53,7 @@ def post_urls():
     errors = validator(url)
     if errors:
         flash(F'{errors["url"]}', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('index'), code=422)
     try:
         conn = psycopg2.connect(DATABASE_URL)
         with conn:

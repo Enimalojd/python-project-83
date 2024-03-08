@@ -9,6 +9,7 @@ from .db_requests import (SELECT_ALL_URLS, CHECK_FOR_MATCHES,
                           ADD_URL, SELECT_DATA, SELECT_PREF,
                           SELECT_CHECK_DATA, SELECT_NAME, INSERT_CHECK)
 from .req import get_data
+from .parse import url_parse
 
 
 app = Flask(__name__)
@@ -54,6 +55,7 @@ def post_urls():
     if errors:
         flash(F'{errors["url"]}', 'error')
         return redirect(url_for('index'))
+    url = url_parse(url)
     try:
         conn = psycopg2.connect(DATABASE_URL)
         with conn:

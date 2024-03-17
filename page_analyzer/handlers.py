@@ -20,6 +20,7 @@ def get_all_urls():
                     ) uc ON u.id = uc.url_id
                     ORDER BY u.id DESC;
                 """)
+            connection.putconn(conn)
             return curs.fetchall()
 
 
@@ -28,6 +29,7 @@ def check_url_existence(url):
     with conn:
         with conn.cursor() as curs:
             curs.execute("""SELECT id FROM urls WHERE name = (%s);""", (url,))
+            connection.putconn(conn)
             return curs.fetchone()
 
 
@@ -38,6 +40,7 @@ def add_new_url(url):
             curs.execute("""INSERT INTO urls (name, created_at)
                          VALUES (%s, %s) RETURNING id;""",
                          (url, date.today()))
+            connection.putconn(conn)
             return curs.fetchone()
 
 
@@ -55,6 +58,7 @@ def get_url_data(url_id):
                          (url[0][0],))
             checks = curs.fetchall()
             data = (url, checks)
+            connection.putconn(conn)
             return data
 
 
@@ -63,6 +67,7 @@ def get_url_name_by_id(url_id):
     with conn:
         with conn.cursor() as cur:
             cur.execute("SELECT name FROM urls WHERE id = %s;", (int(url_id),))
+            connection.putconn(conn)
             return cur.fetchone()
 
 
@@ -77,3 +82,4 @@ def insert_new_check(url_id, data):
                 int(url_id), date.today(), data['status'],
                 data['h1'], data['title'], data['description']))
             conn.commit()
+            connection.putconn(conn)

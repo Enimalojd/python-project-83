@@ -1,16 +1,13 @@
-from datetime import date
-import psycopg2
 from psycopg2 import OperationalError
 from flask import (Flask, render_template, request,
                    redirect, url_for, flash, get_flashed_messages,
                    make_response)
-from config import SECRET_KEY, DATABASE_URL
+from config import SECRET_KEY
 from .validate import validator
-from .db_requests import (SELECT_ALL_URLS, CHECK_FOR_MATCHES,
-                          ADD_URL, SELECT_DATA, SELECT_PREF,
-                          SELECT_CHECK_DATA, SELECT_NAME, INSERT_CHECK)
 from .req import get_data
 from .parse import url_parse
+from .handlers import (get_all_urls, check_url_existence, add_new_url,
+                       get_url_data, get_url_name_by_id, insert_new_check)
 
 
 app = Flask(__name__)
@@ -27,23 +24,15 @@ def index():
 def get_urls():
     messages = get_flashed_messages(with_categories=True)
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn:
-            with conn.cursor() as curs:
-                curs.execute(SELECT_ALL_URLS)
-                urls = curs.fetchall()
-                checks = []
-                for url in urls:
-                    curs.execute(SELECT_PREF, (url[0],))
-                    last_check = curs.fetchone()
-                    if last_check:
-                        url = url + (last_check[0], last_check[1])
-                        checks.append(url)
-                    else:
-                        url = url + ('', '')
-                        checks.append(url)
-                return render_template('urls.html',
-                                       messages=messages, urls=checks)
+        urls_with_checks = get_all_urls()
+        checks = []
+        for url_info in urls_with_checks:
+            url_id, url_name, created_at, status_code = url_info
+            if created_at is not None:
+                checks.append((url_id, url_name, created_at, status_code))
+            else:
+                checks.append((url_id, url_name, '', ''))
+        return render_template('urls.html', messages=messages, urls=checks)
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
         return redirect('/')
@@ -58,19 +47,13 @@ def post_urls():
         return make_response(render_template('index.html'), 422)
     url = url_parse(url)
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn:
-            with conn.cursor() as curs:
-                curs.execute(CHECK_FOR_MATCHES, (url,))
-                url_id = curs.fetchone()
-                if url_id:
-                    flash('Страница уже существует', 'alert')
-                    return redirect(url_for('get_url', id=url_id[0]), code=302)
-                curs.execute(ADD_URL, (url, date.today()))
-                url_id = curs.fetchone()
-                flash('Страница успешно добавлена', 'success')
-                conn.commit()
-                return redirect(url_for('get_url', id=url_id[0]), code=302)
+        url_id = check_url_existence(url)
+        if url_id:
+            flash('Страница уже существует', 'alert')
+            return redirect(url_for('get_url', id=url_id[0]), code=302)
+        url_id = add_new_url(url)
+        flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('get_url', id=url_id[0]), code=302)
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
         return redirect('/')
@@ -80,15 +63,9 @@ def post_urls():
 def get_url(id):
     messages = get_flashed_messages(with_categories=True)
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn:
-            with conn.cursor() as curs:
-                curs.execute(SELECT_DATA, (int(id),))
-                url = curs.fetchall()
-                curs.execute(SELECT_CHECK_DATA, (url[0][0],))
-                checks = curs.fetchall()
-        return render_template('new.html', url=url,
-                               messages=messages, checks=checks)
+        url, checks = get_url_data(id)
+        return render_template('new.html', url=url, messages=messages,
+                               checks=checks)
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
         return redirect(url_for('get_url', id=int(id)), code=302)
@@ -97,26 +74,19 @@ def get_url(id):
 @app.post('/urls/<id>/checks')
 def post_checks(id):
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute(SELECT_NAME, (int(id),))
-                url = cur.fetchone()
-                new_data = get_data(str(url[0]))
-                if new_data:
-                    cur.execute(INSERT_CHECK, (int(id), date.today(),
-                                               new_data['status'],
-                                               new_data['h1'],
-                                               new_data['title'],
-                                               new_data['description']))
-                    conn.commit()
-                    flash('Страница успешно проверена', 'success')
-                    return redirect(url_for('get_url', id=int(id)), code=302)
+        url_name = get_url_name_by_id(id)
+        if url_name:
+            new_data = get_data(str(url_name[0]))
+            if new_data:
+                insert_new_check(id, new_data)
+                flash('Страница успешно проверена', 'success')
+            else:
                 flash('Произошла ошибка при проверке', 'error')
-                return redirect(url_for('get_url', id=int(id)), code=302)
+        else:
+            flash('Страница не найдена', 'error')
     except OperationalError:
         flash('Ошибка при подключении к базе данных!', 'error')
-        return redirect(url_for('get_url', id=int(id)), code=302)
+    return redirect(url_for('get_url', id=int(id)), code=302)
 
 
 @app.errorhandler(404)

@@ -3,9 +3,9 @@ from flask import (Flask, render_template, request,
                    redirect, url_for, flash, get_flashed_messages,
                    make_response)
 from config import SECRET_KEY
-from .validate import validator
-from .req import get_data
-from .parse import url_parse
+from .validate import valid_url
+from .urls import extract_page_data
+from .urls import url_parse
 from .handlers import (get_all_urls, check_url_existence, add_new_url,
                        get_url_data, get_url_name_by_id, insert_new_check)
 
@@ -41,7 +41,7 @@ def get_urls():
 @app.post('/urls')
 def post_urls():
     url = request.form['url']
-    errors = validator(url)
+    errors = valid_url(url)
     if errors:
         flash(F'{errors["url"]}', 'error')
         return make_response(render_template('index.html'), 422)
@@ -76,7 +76,7 @@ def post_checks(id):
     try:
         url_name = get_url_name_by_id(id)
         if url_name:
-            new_data = get_data(str(url_name[0]))
+            new_data = extract_page_data(str(url_name[0]))
             if new_data:
                 insert_new_check(id, new_data)
                 flash('Страница успешно проверена', 'success')

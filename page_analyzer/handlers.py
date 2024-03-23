@@ -5,11 +5,14 @@ from .db import get_connection_pool
 def get_all_urls():
     with get_connection_pool() as conn:
         with conn.cursor() as curs:
-            curs.execute("""SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code
+            curs.execute("""SELECT urls.id, urls.name, url_checks.created_at,
+                         url_checks.status_code
                             FROM urls LEFT JOIN (
-                                SELECT DISTINCT ON (url_id) url_id, created_at, status_code
+                                SELECT DISTINCT ON (url_id)
+                                url_id, created_at, status_code
                                 FROM url_checks
-                                ORDER BY url_id, created_at DESC) AS url_checks ON urls.id = url_checks.url_id
+                                ORDER BY url_id, created_at DESC)
+                                AS url_checks ON urls.id = url_checks.url_id
                             ORDER BY urls.id DESC ;""")
             return curs.fetchall()
 

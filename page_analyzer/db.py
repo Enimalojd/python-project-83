@@ -5,8 +5,8 @@ from config import DATABASE_URL
 
 def create_connection_pool():
     return pool.SimpleConnectionPool(1,
-                                    10,
-                                    DATABASE_URL)
+                                     10,
+                                     DATABASE_URL)
 
 
 @contextmanager

@@ -1,36 +1,28 @@
 from datetime import date
-from .db import connection
+from .db import get_connection_pool
 
 
 def get_all_urls():
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as curs:
-            curs.execute("""
-                    SELECT u.id, u.name, uc.created_at, uc.status_code
-                    FROM urls u
-                    LEFT JOIN (
-                        SELECT url_id, created_at, status_code
-                        FROM url_checks
-                        WHERE (url_id, id) IN (
-                            SELECT url_id, MAX(id) AS max_id
-                            FROM url_checks
-                            GROUP BY url_id
-                        )
-                    ) uc ON u.id = uc.url_id
-                    ORDER BY u.id DESC;
-                """)
+            curs.execute("""SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code
+                            FROM urls LEFT JOIN (
+                                SELECT DISTINCT ON (url_id) url_id, created_at, status_code
+                                FROM url_checks
+                                ORDER BY url_id, created_at DESC) AS url_checks ON urls.id = url_checks.url_id
+                            ORDER BY urls.id DESC ;""")
             return curs.fetchall()
 
 
 def check_url_existence(url):
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as curs:
             curs.execute("""SELECT id FROM urls WHERE name = (%s);""", (url,))
             return curs.fetchone()
 
 
 def add_new_url(url):
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as curs:
             curs.execute("""INSERT INTO urls (name, created_at)
                          VALUES (%s, %s) RETURNING id;""",
@@ -39,7 +31,7 @@ def add_new_url(url):
 
 
 def get_url_data(url_id):
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as curs:
             curs.execute("""SELECT id, name, created_at
                          FROM urls WHERE id = (%s);""",
@@ -55,15 +47,14 @@ def get_url_data(url_id):
 
 
 def get_url_name_by_id(url_id):
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT name FROM urls WHERE id = %s;", (int(url_id),))
-            connection.putconn(conn)
             return cur.fetchone()
 
 
 def insert_new_check(url_id, data):
-    with connection.getconn() as conn:
+    with get_connection_pool() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO url_checks (url_id, created_at,
@@ -72,4 +63,4 @@ def insert_new_check(url_id, data):
                 int(url_id), date.today(), data['status'],
                 data['h1'], data['title'], data['description']))
             conn.commit()
-            connection.putconn(conn)
+    return

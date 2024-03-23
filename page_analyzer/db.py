@@ -4,11 +4,9 @@ from config import DATABASE_URL
 
 
 def create_connection_pool():
-    connection_pool = pool.SimpleConnectionPool(1,
-                                                10,
-                                                DATABASE_URL
-                                                )
-    return connection_pool
+    return pool.SimpleConnectionPool(1,
+                                    10,
+                                    DATABASE_URL)
 
 
 @contextmanager
@@ -19,6 +17,7 @@ def get_connection_pool():
     try:
         conn = connect.getconn()
         yield conn
+        conn.commit()
     finally:
         connect.putconn(conn)
 
